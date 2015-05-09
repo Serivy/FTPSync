@@ -2,14 +2,24 @@
 {
     public class RemoteFileInfo
     {
-        public RemoteFileInfo(WinSCP.RemoteFileInfo file)
+        public RemoteFileInfo(string filename, string fullname)
         {
-            FileName = file.Name;
-            FullName = file.Name;
+            FileName = filename;
+            FullName = fullname;
         }
 
         public string FullName { get; set; }
 
         public string FileName { get; set; }
+
+        public string EncodedPath()
+        {
+            return EncodePath(FullName);
+        }
+
+        public static string EncodePath(string path)
+        {
+            return path.Replace("[", "\\[").Replace("]", "\\]");
+        }
     }
 }

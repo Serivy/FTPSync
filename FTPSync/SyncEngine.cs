@@ -10,23 +10,28 @@ namespace FTPSync
         private SyncedRecordKeeper records;
         private Logger log;
         private readonly string metaFolder;
+        private Configuration userConfiguration;
 
         public SyncEngine()
         {
-            var destination = ConfigurationManager.AppSettings["destination"];
+            ExeConfigurationFileMap configFileMap = new ExeConfigurationFileMap();
+            configFileMap.ExeConfigFilename = "User.Config";
+            userConfiguration = ConfigurationManager.OpenMappedExeConfiguration(configFileMap, ConfigurationUserLevel.None);
+
+            var destination = GetConfig("destination");
             metaFolder = Path.Combine(destination, ".sftps");
             log = new Logger(metaFolder);
         }
 
         public void PerformSync(bool baseline = false)
         {
-            var host = ConfigurationManager.AppSettings["host"];
-            var port = int.Parse(ConfigurationManager.AppSettings["port"]);
-            var username = ConfigurationManager.AppSettings["username"];
-            var password = ConfigurationManager.AppSettings["password"];
-            var source = ConfigurationManager.AppSettings["source"];
-            var destination = ConfigurationManager.AppSettings["destination"];
-            var hostKey = ConfigurationManager.AppSettings["hostkey"]; 
+            var host = GetConfig("host");
+            var port = int.Parse(GetConfig("port"));
+            var username = GetConfig("username");
+            var password = GetConfig("password");
+            var source = GetConfig("source");
+            var destination = GetConfig("destination");
+            var hostKey = GetConfig("hostKey");
 
             if (!Directory.Exists(metaFolder))
             {
@@ -42,7 +47,7 @@ namespace FTPSync
                 {
                     client.Connect();
                     var files = client.GetFiles(true, source).ToList();
-
+                    
                     foreach (var file in files)
                     {
                         if (!records.FileAlreadyDownloaded(file.FullName))
@@ -52,10 +57,6 @@ namespace FTPSync
                             // Download the file.
                             var targetFilePath = Path.Combine(destination, file.FileName);
                             client.DownloadFile(file.FullName, targetFilePath);
-                            //using (var fileStream = File.Create(targetFilePath))
-                            //{
-                            //    client.DownloadFile(file.FullName, fileStream);
-                            //}
 
                             records.AddFile(file.FullName);
                             log.Log(string.Format("File downloaded {0}.", targetFilePath));
@@ -71,6 +72,12 @@ namespace FTPSync
             {
                 log.Log(string.Format("Error: {0}.", ex.Message));
             }
+        }
+
+        private string GetConfig(string key)
+        {
+            var value = userConfiguration.AppSettings.Settings.AllKeys.Contains(key) ? userConfiguration.AppSettings.Settings[key].Value : ConfigurationManager.AppSettings[key];
+            return value;
         }
     }
 }
