@@ -19,7 +19,7 @@ namespace FTPSync
             userConfiguration = ConfigurationManager.OpenMappedExeConfiguration(configFileMap, ConfigurationUserLevel.None);
 
             var destination = GetConfig("destination");
-            metaFolder = Path.Combine(destination, ".sftps");
+            metaFolder = Path.Combine(destination, ".ftpsync");
             log = new Logger(metaFolder);
         }
 
